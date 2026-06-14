@@ -44,3 +44,7 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 swarm_responses.db-*
+
+# Skills
+.agents/
+skills-lock.json
