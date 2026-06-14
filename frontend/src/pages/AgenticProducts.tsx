@@ -4,6 +4,7 @@ import { ExternalLink, ArrowRight, Users } from 'lucide-react';
 import { useReadContract } from 'wagmi';
 import { formatUnits } from 'viem';
 
+const API = import.meta.env.VITE_API_URL || '';
 class ErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean; error: Error | null }> {
   state = { hasError: false, error: null as Error | null };
   static getDerivedStateFromError(error: Error) { return { hasError: true, error }; }
@@ -28,7 +29,7 @@ const VAULT_ABI = [
 ] as const;
 
 async function loadFormations() {
-  try { const r = await fetch('/api/formations'); const d = await r.json(); return d.formations || []; } catch { return []; }
+  try { const r = await fetch(`${API}/api/formations`); const d = await r.json(); return d.formations || []; } catch { return []; }
 }
 
 const PURPOSE_LABELS: Record<string, string> = { VAULT: 'VAULT', VISUAL: 'VISUAL', ARBITRAGE: 'ARBITRAGE', SUPERAGENT: 'SUPERAGENT' };
@@ -311,7 +312,7 @@ export default function AgenticProducts() {
     const refresh = async () => {
       setFormations(await loadFormations());
       try {
-        const r = await fetch('/api/products');
+        const r = await fetch(`${API}/api/products`);
         if (!r.ok) { setFetchError(`HTTP ${r.status}`); return; }
         const d = await r.json();
         if (d.products) setProducts(d.products);
