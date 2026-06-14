@@ -1,6 +1,21 @@
 const Database = require('better-sqlite3');
 const path = require('path');
-const db = new Database(path.join(__dirname, 'swarm_responses.db'));
+const fs = require('fs');
+
+const DB_PATH = path.join(__dirname, 'swarm_responses.db');
+
+// Check if the database already exists with data
+if (fs.existsSync(DB_PATH)) {
+    const stats = fs.statSync(DB_PATH);
+    if (stats.size > 0) {
+        console.log(`[HSwarm] Database already exists (${Math.round(stats.size / 1024 / 1024)}MB). Skipping init.`);
+        process.exit(0);
+    }
+}
+
+console.log("[HSwarm] No database found. Creating fresh database structure...");
+
+const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
 
 db.exec(`CREATE TABLE IF NOT EXISTS valid_agents (network TEXT NOT NULL, agent_id TEXT NOT NULL, agent_name TEXT NOT NULL, endpoint TEXT NOT NULL, discovery_keyword TEXT NOT NULL DEFAULT '', has_mcp INTEGER NOT NULL DEFAULT 0, is_free INTEGER NOT NULL DEFAULT 0, winning_variant TEXT NOT NULL DEFAULT '', available_tools TEXT NOT NULL DEFAULT '[]', response_time_ms INTEGER NOT NULL DEFAULT 0, first_seen TEXT NOT NULL DEFAULT (datetime('now')), last_audited TEXT NOT NULL DEFAULT (datetime('now')), PRIMARY KEY (network, agent_id));`);
@@ -12,4 +27,4 @@ db.exec(`CREATE TABLE IF NOT EXISTS swarms (swarm_id TEXT PRIMARY KEY, purpose T
 db.exec(`CREATE TABLE IF NOT EXISTS swarm_weights (swarm_id TEXT NOT NULL, network TEXT NOT NULL, agent_id TEXT NOT NULL, agent_name TEXT NOT NULL DEFAULT '', weight REAL NOT NULL DEFAULT 0, iterations INTEGER NOT NULL DEFAULT 0, cumulative_pnl REAL NOT NULL DEFAULT 0, eliminated INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL DEFAULT (datetime('now')), PRIMARY KEY (swarm_id, network, agent_id));`);
 
 db.close();
-console.log("[HSwarm] Database successfully initialized!");
+console.log("[HSwarm] Fresh database initialized successfully.");
