@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { RefreshCw, X } from 'lucide-react';
 import { usePipeline } from '../pipeline/PipelineContext';
 
-const API = '';
+const API = import.meta.env.VITE_API_URL || '';
 
 const PURPOSES = [
   { id: 'VAULT', label: 'DeFi Vault (Yield)', desc: 'AI agents collectively manage capital allocation across DeFi protocols (Aave, Morpho, etc.) to optimize yield.' },

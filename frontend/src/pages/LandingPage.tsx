@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle } from 'lucide-react';
 
-const API = '';
+const API = import.meta.env.VITE_API_URL || '';
 
 function LiveRegistryBanner() {
   const [stats, setStats] = useState<any>(null);

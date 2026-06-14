@@ -43,3 +43,4 @@ yarn-error.log*
 # OS
 .DS_Store
 Thumbs.db
+swarm_responses.db-*

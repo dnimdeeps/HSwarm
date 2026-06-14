@@ -6,6 +6,7 @@ import LandingPage from './pages/LandingPage';
 import CreateOrJoin from './pages/CreateOrJoin';
 import AgenticProducts from './pages/AgenticProducts';
 import ProductDetail from './pages/ProductDetail';
+import VaultDashboard from './pages/VaultDashboard';
 import UsingPage from './pages/UsingPage';
 
 function Navbar() {
@@ -97,6 +98,7 @@ function App() {
             <Route path="/create" element={<CreateOrJoin />} />
             <Route path="/products" element={<AgenticProducts />} />
             <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/vault/:address" element={<VaultDashboard />} />
             <Route path="/using" element={<UsingPage />} />
           </Routes>
         </div>

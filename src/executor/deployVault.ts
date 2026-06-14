@@ -47,23 +47,58 @@ export async function deployVault(
     ? "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d" // Arb Sepolia mock USDC
     : "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"; // Arb Mainnet USDC
 
-  // Normalize allocations to sum 10000 before vault creation
-  // This ensures maxSingleProtocolBps accommodates the actual strategy
-  const rawAllocs = blueprint.allocations || [];
-  const allocsTotal = rawAllocs.reduce((s: number, a: any) => s + (a.target_pct_bps || 0), 0);
-  if (allocsTotal > 0 && allocsTotal !== 10000) {
-    for (const alloc of rawAllocs) {
-      alloc.target_pct_bps = Math.round(((alloc.target_pct_bps || 0) / allocsTotal) * 10000);
-    }
-    const finalTotal = rawAllocs.reduce((s: number, a: any) => s + a.target_pct_bps, 0);
-    if (finalTotal !== 10000 && rawAllocs.length > 0) {
-      rawAllocs[rawAllocs.length - 1].target_pct_bps += (10000 - finalTotal);
-    }
-    console.log(`   Normalized allocations to sum 10000: ${rawAllocs.map((a: any) => `${a.protocol}: ${a.target_pct_bps}`).join(', ')}`);
+  // Map common pool names to their protocol
+  function normalizeProtocol(raw: string): string {
+    const lower = raw.toLowerCase();
+    if (lower.includes("morpho")) return "Morpho";
+    if (["gauntlet", "steakhouse", "spark", "moonwell", "flagship"].some(p => lower.includes(p))) return "Morpho";
+    if (lower.includes("aave")) return "Aave";
+    if (lower.includes("compound")) return "Compound";
+    if (lower.includes("fluid")) return "Fluid";
+    if (lower.includes("gmx")) return "GMX";
+    console.log(`   [WARN] Unknown protocol "${raw}", treating as Aave fallback`);
+    return "Aave";
   }
 
+  // Map pool names to Morpho vault addresses (default: Gauntlet USDC Core)
+  function getMorphoVault(pool: string): string {
+    const lower = pool.toLowerCase();
+    if (lower.includes("steakhouse") && lower.includes("prime")) return "0x4C20c82FFCB0ea5F58eb4620d2F212D8879B7C03";
+    if (lower.includes("steakhouse")) return "0x4C20c82FFCB0ea5F58eb4620d2F212D8879B7C03";
+    if (lower.includes("moonwell") || lower.includes("flagship")) return "0x4C20c82FFCB0ea5F58eb4620d2F212D8879B7C03";
+    if (lower.includes("spark")) return "0x4C20c82FFCB0ea5F58eb4620d2F212D8879B7C03";
+    return "0x4C20c82FFCB0ea5F58eb4620d2F212D8879B7C03"; // Gauntlet (default)
+  }
+
+  // Normalize protocol names and group allocations by protocol
+  const rawAllocs = blueprint.allocations || [];
+  const protoMap = new Map<string, { protocol: string; pool: string; target_pct_bps: number }>();
+  for (const alloc of rawAllocs) {
+    const proto = normalizeProtocol(alloc.protocol || "");
+    const existing = protoMap.get(proto);
+    if (existing) {
+      existing.target_pct_bps += alloc.target_pct_bps || 0;
+    } else {
+      protoMap.set(proto, { protocol: proto, pool: alloc.pool || "", target_pct_bps: alloc.target_pct_bps || 0 });
+    }
+  }
+  const consolidated = Array.from(protoMap.values());
+
+  // Normalize consolidated to sum 10000
+  const allocsTotal = consolidated.reduce((s: number, a: any) => s + a.target_pct_bps, 0);
+  if (allocsTotal > 0 && allocsTotal !== 10000) {
+    for (const alloc of consolidated) {
+      alloc.target_pct_bps = Math.round((alloc.target_pct_bps / allocsTotal) * 10000);
+    }
+    const finalTotal = consolidated.reduce((s: number, a: any) => s + a.target_pct_bps, 0);
+    if (finalTotal !== 10000 && consolidated.length > 0) {
+      consolidated[consolidated.length - 1].target_pct_bps += (10000 - finalTotal);
+    }
+  }
+  console.log(`   Consolidated allocations: ${consolidated.map((a: any) => `${a.protocol}: ${a.target_pct_bps}`).join(', ')}`);
+
   // Compute a safe max that accommodates the largest allocation
-  const maxAlloc = Math.max(...rawAllocs.map((a: any) => a.target_pct_bps || 0), 0);
+  const maxAlloc = Math.max(...consolidated.map((a: any) => a.target_pct_bps || 0), 0);
   const safeMaxBps = Math.max(blueprint.max_single_protocol_bps || 6000, maxAlloc);
 
   // Deploy the actual vault using the Factory
@@ -105,6 +140,8 @@ export async function deployVault(
 
   const isMainnet = network === "Arbitrum One" || network === "Arbitrum/Mainnet" || network.toLowerCase().includes("mainnet");
 
+  const formattedAllocations: any[] = [];
+
   if (!vaultAddress || vaultAddress === "0x" || vaultAddress === "0x0000000000000000000000000000000000000000") {
     console.log("   Could not find Vault address in events, falling back to dummy.");
     vaultAddress = "0x1111111111111111111111111111111111111111";
@@ -112,18 +149,13 @@ export async function deployVault(
     // Deploy MockAdapters and set allocations
     console.log(`   Vault address: ${vaultAddress}`);
     console.log(`   Deploying Adapters for Swarm strategy on ${network}...`);
-    
-    const allocations = blueprint.allocations || [];
-    const formattedAllocations = [];
 
-    // Allocations already normalized to sum 10000 (done before vault creation)
-
-    for (const alloc of allocations) {
+    for (const alloc of consolidated) {
       console.log(`     -> Deploying adapter for ${alloc.protocol}...`);
       let adapterTx;
 
       if (isMainnet) {
-          if (alloc.protocol.includes("Aave")) {
+          if (alloc.protocol === "Aave") {
               const aaveAbiPath = path.join(__dirname, "../../contracts/out/AaveAdapter.sol/AaveAdapter.json");
               const aaveJson = JSON.parse(fs.readFileSync(aaveAbiPath, "utf8"));
               adapterTx = await walletClient.deployContract({
@@ -136,14 +168,28 @@ export async function deployVault(
                     vaultAddress
                 ]
               });
-          } else if (alloc.protocol.includes("Morpho")) {
+          } else if (alloc.protocol === "Compound") {
+              const compoundAbiPath = path.join(__dirname, "../../contracts/out/CompoundAdapter.sol/CompoundAdapter.json");
+              const compoundJson = JSON.parse(fs.readFileSync(compoundAbiPath, "utf8"));
+              adapterTx = await walletClient.deployContract({
+                abi: compoundJson.abi,
+                bytecode: compoundJson.bytecode.object,
+                args: [
+                    "0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA", // cUSDCv3 proxy
+                    usdcAddress,
+                    vaultAddress
+                ]
+              });
+          } else if (alloc.protocol === "Morpho") {
               const morphoAbiPath = path.join(__dirname, "../../contracts/out/MorphoAdapter.sol/MorphoAdapter.json");
               const morphoJson = JSON.parse(fs.readFileSync(morphoAbiPath, "utf8"));
+              const morphoVault = getMorphoVault(alloc.pool);
+              console.log(`       Using Morpho vault ${morphoVault} for pool "${alloc.pool}"`);
               adapterTx = await walletClient.deployContract({
                 abi: morphoJson.abi,
                 bytecode: morphoJson.bytecode.object,
                 args: [
-                    "0x4C20c82FFCB0ea5F58eb4620d2F212D8879B7C03", // Gauntlet USDC Core
+                    morphoVault,
                     usdcAddress, // Real USDC
                     vaultAddress
                 ]
@@ -195,6 +241,7 @@ export async function deployVault(
 
   console.log(`✅ HSwarmVault deployed successfully at: ${vaultAddress}`);
 
+  let chainlinkUpkeepId = "";
   console.log(`\n🔗 Initializing AI Agent (CDP AgentKit) to register Chainlink Upkeep...`);
   try {
     const { initializeAgentWallet } = require("./walletAgent");
@@ -207,12 +254,42 @@ export async function deployVault(
             vaultName: blueprint.vault_name || "HSwarm Vault" 
         });
         console.log(`[Agent] ${result}`);
+        const idMatch = result.match(/Upkeep ID:\s*(\d+)/);
+        if (idMatch) chainlinkUpkeepId = idMatch[1];
     } else {
         console.log(`[Agent] [WARN] register_chainlink_upkeep tool not found in agentkit.`);
     }
   } catch (err: any) {
     console.error(`[Agent] Failed to register upkeep via AgentKit: ${err.message}`);
   }
+
+  const networkSlug = isMainnet ? "arbitrum-one" : "arbitrum-sepolia";
+  const deployment = {
+    vaultAddress,
+    network: networkSlug,
+    strategyName: blueprint.strategy_name || "HSwarm Strategy",
+    vaultName: blueprint.vault_name || "HSwarm Vault",
+    usdcAddress,
+    factoryAddress,
+    chainlinkUpkeepId: chainlinkUpkeepId || null,
+    allocations: formattedAllocations.map((a: any) => ({
+      adapter: a.adapter,
+      targetPctBps: Number(a.targetPct),
+      protocolName: a.protocolName,
+    })),
+    deployedAt: new Date().toISOString(),
+  };
+
+  const deploymentsPath = path.join(process.cwd(), "deployments.json");
+  let deployments: any[] = [];
+  try {
+    if (fs.existsSync(deploymentsPath)) {
+      deployments = JSON.parse(fs.readFileSync(deploymentsPath, "utf8"));
+    }
+  } catch {}
+  deployments.push(deployment);
+  fs.writeFileSync(deploymentsPath, JSON.stringify(deployments, null, 2));
+  console.log(`📄 Deployment saved to deployments.json`);
 
   return vaultAddress;
 }

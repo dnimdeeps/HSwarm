@@ -16,7 +16,7 @@ import {
   walletConnectWallet
 } from '@rainbow-me/rainbowkit/wallets';
 import { WagmiProvider, createConfig, http } from 'wagmi';
-import { arbitrumSepolia } from 'wagmi/chains';
+import { arbitrumSepolia, arbitrum } from 'wagmi/chains';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 
 const projectId = 'c4f79cc0e8e4585c5443a758782bbcd3';
@@ -36,9 +36,10 @@ const connectors = connectorsForWallets(
 
 const config = createConfig({
   connectors,
-  chains: [arbitrumSepolia],
+  chains: [arbitrumSepolia, arbitrum],
   transports: {
     [arbitrumSepolia.id]: http(),
+    [arbitrum.id]: http(),
   },
   ssr: false, 
 });

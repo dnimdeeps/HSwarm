@@ -5,7 +5,7 @@ import { useAccount, useReadContract, useWriteContract, usePublicClient } from '
 import { parseUnits, formatUnits, decodeEventLog } from 'viem';
 import ReactMarkdown from 'react-markdown';
 
-const API = '';
+const API = import.meta.env.VITE_API_URL || '';
 
 // ─── ABI ──────────────────────────────────────────────────────────────────────
 
@@ -297,13 +297,13 @@ export default function ProductDetail() {
           address: VAULT_ADDRESS as `0x${string}`,
           fromBlock: 'earliest',
           toBlock:   'latest',
-        });
+        }) as any[];
 
         const parsed: ParsedEvent[] = [];
 
         for (const log of logs) {
           try {
-            const decoded = decodeEventLog({
+            const decoded: any = decodeEventLog({
               abi:    VAULT_ABI as any,
               data:   log.data,
               topics: log.topics,
@@ -812,7 +812,7 @@ export default function ProductDetail() {
               </span>
             </div>
 
-            {mode === 'DEPOSIT' && usdcBalance && VAULT_ADDRESS && (
+            {mode === 'DEPOSIT' && !!usdcBalance && VAULT_ADDRESS && (
               <div style={{ display: 'flex', gap: '8px' }}>
                 {['25', '50', '100'].map(v => (
                   <button

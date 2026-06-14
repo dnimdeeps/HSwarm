@@ -66,14 +66,16 @@ export class ChainlinkActionProvider extends ActionProvider<EvmWalletProvider> {
         
         try {
             const network = walletProvider.getNetwork();
-            const chainId = network.networkId;
+            const networkId = network.networkId;
             const walletAddress = walletProvider.getAddress();
+
+            console.log(`[Agent] Detected network: ${networkId}`);
 
             let registrarAddress: Address = getAddress("0x881918E24290084409DaA91979A30e6f0dB52eBe"); // Arb Sepolia Automation 2.1 Registrar
             let linkAddress: Address = getAddress("0xb1D4538B4571d411F07960EF2838Ce337FE1E80E"); // Arb Sepolia LINK
 
-            // Arbitrum One Mainnet Chain ID is 42161
-            const isMainnet = Number(chainId) === 42161;
+            // AgentKit returns networkId as "arbitrum-mainnet" or "arbitrum-sepolia"
+            const isMainnet = networkId === "arbitrum-mainnet";
             if (isMainnet) {
                 registrarAddress = getAddress("0x86EFBD0b6736Bed994962f9797049422A3A8E8Ad"); // Arbitrum One Automation 2.1 Registrar
                 linkAddress = getAddress("0xf97f4df75117a78c1a5a0dbb814af92458539fb4"); // Arbitrum One LINK
@@ -101,6 +103,7 @@ export class ChainlinkActionProvider extends ActionProvider<EvmWalletProvider> {
                 );
             }
             console.log(`[Agent] LINK balance: ${formatEther(linkBalance)} LINK ✅`);
+            console.log(`[Agent] Registrar: ${registrarAddress} | LINK token: ${linkAddress}`);
 
             console.log(`[Agent] Approving 2 LINK to Chainlink Registrar ${registrarAddress}...`);
             const approveData = encodeFunctionData({

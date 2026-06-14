@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
 
-const API = '';
+const API = import.meta.env.VITE_API_URL || '';
 
 type PipelineStatus = 'IDLE' | 'RUNNING' | 'WAITING_AGENTS' | 'COMPLETE' | 'ERROR';
 

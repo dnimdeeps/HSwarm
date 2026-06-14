@@ -4,7 +4,7 @@ import { formatUnits } from 'viem';
 import { Link } from 'react-router-dom';
 import { ExternalLink } from 'lucide-react';
 
-const API = '';
+const API = import.meta.env.VITE_API_URL || '';
 
 // ─── Keyframe injection ───────────────────────────────────────────────────────
 const KEYFRAMES = `

@@ -9,7 +9,7 @@ const http = require('http');
 const fs = require('fs');
 
 const DB_PATH = path.join(__dirname, 'swarm_responses.db');
-const PORT = 3333;
+const PORT = process.env.PORT || 3333;
 
 function getDb() {
   return new Database(DB_PATH, { readonly: true });
