@@ -1,152 +1,59 @@
 # HSwarm
+## What is HSwarm?
 
-**Agent Swarm Protocol — from ERC-8004 discovery to on-chain deployment.**
+HSwarm is a decentralized AI protocol and marketplace designed to solve the "reputation monopoly" problem in the ERC-8004 Agent Economy. 
 
-HSwarm discovers real AI agents registered on-chain via ERC-8004, audits them for compatibility, runs them through a LangGraph consensus pipeline, and deploys the resulting strategy as a functioning smart contract on Arbitrum.
+When autonomous agents are registered on-chain via ERC-8004, the market heavily biases towards hiring agents that already have a high reputation. This creates an impenetrable barrier to entry for new, highly capable agents. 
 
----
-
-## What It Does
-
-The pipeline takes agents that no one has heard of and produces a real, working on-chain product:
-
-1. **Discover** agents from ERC-8004 subgraphs across 4 chains
-2. **Audit** each agent against 16 MCP protocol variants
-3. **Standardize** raw agent responses into unified JSON via LLM
-4. **Consensus** via LangGraph — the swarm produces a unified strategy
-5. **Deploy** the strategy as an ERC-4626 vault with protocol adapters and Chainlink Automation
-6. **Dashboard** — a web UI to deposit/withdraw and monitor the vault
+HSwarm disrupts this by aggregating low-reputation, functionally similar agents into cooperative **"Swarm Formations"** (Black Boxes). Rather than relying on historical reputation, HSwarm subjects these agents to real-world audits, forces them to cooperate via a standardization layer, and packages their collective intelligence into user-facing **Agentic Products** (such as DeFi Vaults).
 
 ---
 
-## Pipeline
+## Technical Architecture & Current Capabilities
 
-```
-Agent Discovery → Audit → LLM Standardization → LangGraph Consensus → On-Chain Deployment → Frontend
-   (Step 1)      (Step 2)      (Step 3)               (Step 4)           (Step 5)          (Step 6)
-```
+The HSwarm protocol consists of a full-stack architecture separated into a Node.js/SQLite orchestration backend and a modern React/Vite frontend dashboard. 
 
-### Step 1 — Agent Discovery
-Queries ERC-8004 subgraphs on Ethereum Mainnet, Base, Arbitrum, and BNB Chain. Skips already-known agents, shuffles randomly (no reputation bias), lazy-loads IPFS metadata with timeouts. Zero trust on reputation — agents are selected purely by function and availability.
+The core protocol currently operates through three fully functional stages:
 
-### Step 2 — Agent Audit
-Connects to each agent's MCP server and probes 16 protocol variants (4 endpoint paths × 4 combinations of MCP version + Accept header). Results are written permanently to a SQLite database — `valid_agents` or `failed_agents` with a failure category. Never re-tests known agents.
+### Step 1: Agent Discovery & Indexing
+Instead of manually sourcing agents, HSwarm dynamically queries the decentralized **The Graph** network across Ethereum Mainnet, Base, and Arbitrum. It pulls all ERC-8004 agent registries and bypasses agents that have already been audited.
+- **IPFS Resolution:** It resolves the IPFS metadata of randomly selected agents using a batched, lazy-loading mechanism.
+- **Local Cache:** To bypass slow public IPFS gateways, the backend maintains a heavy local SQLite cache (`agent_metadata_cache`), allowing for instant swarm construction.
 
-### Step 3 — LLM Standardization
-Sends each agent's raw response to Hugging Face Inference (default: `Llama-3.1-8B-Instruct`) to normalize it into `{ action, asset, confidence, reasoning }`. Handles rate limits, retries, and missing configuration gracefully.
+### Step 2: The Self-Healing Auditor
+Agents on the network are highly fragmented—many are broken, OAuth-gated, or strictly validate endpoints. HSwarm incorporates an automated auditing pipeline to verify agent health before allowing them into a Swarm.
+- **16-Variant Probing:** The auditor attempts to connect to each agent's MCP (Model Context Protocol) server using 16 different combinations of endpoint paths (`/`, `/mcp`, `/v1`, `/sse`), versions, and Accept headers.
+- **Persistent Registry:** 
+  - Agents that successfully handshake and respond are added to the `valid_agents` database.
+  - Agents that timeout, require auth tokens, or return HTML are permanently flagged in the `failed_agents` database.
 
-### Step 4 — LangGraph Consensus
-Instead of agents competing against each other, the swarm feeds into a **LangGraph** where LLM analysts evaluate the data, debate, and produce a unified consensus: protocol recommendations, pool selections, allocation percentages, and rebalance configuration. Output is a blueprint JSON.
-
-### Step 5 — On-Chain Deployment
-Takes the swarm's blueprint and deploys:
-- **VaultFactory** — reusable factory contract
-- **HSwarmVault** — ERC-4626 vault with configurable strategy (rebalance interval, min APY, max single-protocol allocation)
-- **Protocol Adapters** — AaveAdapter, MorphoAdapter, CompoundAdapter that route deposits to their respective protocols
-- **Allocations** — set on-chain, must sum to exactly 10000 bps
-- **Chainlink Automation** — registers an upkeep so the vault rebalances automatically
-
-Pool names (e.g. "Gauntlet", "Steakhouse", "Moonwell") are normalized to their protocols (Morpho) and allocations are consolidated — one adapter per protocol.
-
-### Step 6 — Frontend Dashboard
-React app with:
-- Wallet connection via RainbowKit (MetaMask, Phantom, WalletConnect)
-- Vault dashboard at `/vault/:address` — reads directly from the contract
-- Deposit/Withdraw USDC with automatic approval
-- Live event log (deposits, withdrawals, rebalances)
-- Chainlink Automation status with countdown timer
-- Multi-chain support (Arbitrum Sepolia + Arbitrum One)
+### Step 3: LLM Standardization
+Because HSwarm aggregates heterogeneous agents (which output data in entirely different formats), the protocol utilizes an AI Translation Layer.
+- Valid agents are queried, and their raw, unstructured outputs are sent to a **Hugging Face Inference Provider** (defaulting to `meta-llama/Llama-3.1-8B-Instruct`).
+- The LLM forces the disparate outputs into a unified, deterministic JSON schema (e.g., `{ action, asset, confidence, reasoning }`). This allows the Swarm to speak with a single, unified voice.
 
 ---
 
-## Current Deployments
+## The Platform & Agentic Products
 
-| Network | Vault | Strategy | Chainlink Upkeep |
-|---|---|---|---|
-| Arbitrum One | `0x201ea2...1b00` | Safe USDC Yield Enhancer | `698072630587...664` |
+HSwarm is not just a backend pipeline; it is a user-facing platform where these Swarms are transformed into tangible products. The frontend (accessible at `https://hswarm.vercel.app`) provides a complete interface for managing this ecosystem:
 
-Live dashboard: [Chainlink Automation](https://automation.chain.link/arbitrum/69807263058704082676571068256513945276145989435541215317533139799806854460064)
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Contracts | Solidity 0.8.24, Foundry, OpenZeppelin |
-| Chain | Arbitrum One, Arbitrum Sepolia |
-| Automation | Chainlink Automation 2.1 |
-| Protocols | Aave V3, Morpho Blue, Compound V3 |
-| Consensus | LangGraph, Gemini/Qwen LLMs |
-| Backend | TypeScript, Node.js, SQLite |
-| Frontend | React, Vite, wagmi, RainbowKit, viem |
-| Agent Registry | ERC-8004 subgraphs (The Graph) |
+1. **The Registry Dashboard:** Displays real-time statistics of the global network scan, showing the total number of Valid vs. Failed agents and the primary causes of agent failures.
+2. **Create or Join:** Users can initiate the creation of a new "Agentic Product" (e.g., a Yield Vault or a specialized SuperAgent). They define the parameters (Network, Purpose, Number of Agents). 
+   - *Public Formations:* Users can publicly list their formation, allowing other platform members to "plug in" their own ERC-8004 agents into the remaining slots.
+3. **Agentic Products (Vaults):** The final output of a completed Swarm Formation. For example, a group of 10 DeFi agents whose standardized output directs capital. Users can monitor these products and invest directly through the dashboard.
 
 ---
 
-## Running the Pipeline
+## Future Roadmap (What's Next)
 
-```bash
-# Full pipeline (discovery → audit → standardize → consensus → deploy)
-npx ts-node src/run_auto.ts "Arbitrum One" VAULT 10
+While the Discovery, Auditing, and Standardization layers are fully functional, the following steps are actively in development to complete the protocol's lifecycle:
 
-# Start the API backend
-node server.js
+### Step 4: Competition & Weight Scoring
+Currently, all agents in a Swarm have an equal "weight". The next implementation will introduce real-world backtesting:
+- The standardized output of the Swarm will be continuously evaluated against market truth (e.g., executing a paper-trade based on the Swarm's ETH/USDC signal).
+- Agents whose logic predicted correctly will gain weight. Agents who predicted poorly will lose weight logarithmically.
+- Agents with a weight dropping to zero are pruned from the Swarm, ensuring only the most effective bots survive.
 
-# Start the frontend dev server
-cd frontend && npm run dev
-```
-
-**Configuration** (via `.env`, gitignored):
-- `PRIVATE_KEY` — deployer wallet
-- `HF_TOKEN` — Hugging Face API key (for LLM standardization)
-- `GEMINI_API_KEY` — Gemini API key (for LangGraph)
-- `ARBITRUM_MAINNET_RPC_URL` / `ARBITRUM_SEPOLIA_RPC_URL`
-- `SUBGRAPH_URL_ETH`, `SUBGRAPH_URL_BASE`, `SUBGRAPH_URL_ARB`, `SUBGRAPH_URL_BNB`
-- `KEEPER_ENABLED` — auto-start the rebalancer loop
-
-Deployment info (vault address, adapters, upkeep ID) is written to `deployments.json` after each successful run — safe to commit (no secrets).
-
----
-
-## Project Structure
-
-```
-src/
-  indexer/          — ERC-8004 agent discovery + IPFS resolution
-  orchestrator/     — agent audit, database, swarm management
-  competition/      — LangGraph consensus runner
-  executor/         — vault deployment, Chainlink registration, wallet
-  keeper/           — automated rebalancer loop
-  run_auto.ts       — pipeline orchestrator
-
-contracts/           — Solidity smart contracts (Foundry)
-  src/
-    HSwarmVault.sol     — ERC-4626 vault
-    VaultFactory.sol    — factory
-    adapters/           — AaveAdapter, MorphoAdapter, CompoundAdapter
-
-frontend/            — React web app (Vite + TypeScript)
-  src/pages/
-    VaultDashboard.tsx  — standalone vault page
-    ProductDetail.tsx   — DB-backed product page
-    AgenticProducts.tsx — product gallery
-    LandingPage.tsx     — landing
-    CreateOrJoin.tsx    — swarm creation hub
-
-server.js            — API backend (agent registry, pipeline control)
-swarm_responses.db   — SQLite database (gitignored)
-deployments.json     — deployment records (safe to commit)
-```
-
----
-
-## Database
-
-The SQLite database (`swarm_responses.db`) accumulates agent data across runs:
-
-- `valid_agents` — agents that passed MCP audit (never cleared)
-- `failed_agents` — agents that failed (with failure category, never cleared)
-- `agent_tasks` — current run scratchpad (cleared each run)
-- `agentic_products` — deployed products (vaults, visual dashboards)
-- `swarms`, `swarm_weights`, `iteration_results`, `competition_iterations` — legacy tables from the old competition architecture (no longer actively used)
+### Step 5: On-Chain Execution
+Once the Swarm proves its effectiveness, its collective intelligence will be wired directly to on-chain smart contracts. The Swarm's final, weighted decision will autonomously execute transactions for the Vault investors.
