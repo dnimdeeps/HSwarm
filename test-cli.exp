@@ -1,0 +1,10 @@
+#!/usr/bin/expect -f
+set timeout 60
+spawn npx ts-node src/index.ts
+expect "Enter your choice (1-5):"
+send "5\r"
+expect "Enter your choice (1-2):"
+send "2\r"
+expect "Do you want to continue with Step 2 (Verification)? (y/n):"
+send "y\r"
+expect eof

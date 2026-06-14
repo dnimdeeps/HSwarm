@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSP Quant Terminal</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --muted: #94a3b8; --accent: #38bdf8; --border: #334155; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 40px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 600; letter-spacing: 1px; color: var(--text); }
+        .header .meta { color: var(--muted); font-size: 14px; font-family: monospace; }
+        .terminal-feed { background: #000; color: #10b981; padding: 16px; font-family: monospace; font-size: 14px; border-radius: 6px; margin-bottom: 30px; border-left: 4px solid #10b981; }
+        .consensus-card { background: var(--card); border: 1px solid var(--accent); border-radius: 8px; padding: 24px; margin-bottom: 40px; }
+        .consensus-header { font-size: 12px; font-weight: bold; color: var(--accent); letter-spacing: 2px; margin-bottom: 16px; text-transform: uppercase; }
+        .consensus-body { display: flex; gap: 40px; }
+        .stat { display: flex; flex-direction: column; gap: 8px; }
+        .stat .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .stat .value { font-size: 20px; font-weight: 500; }
+        .stat .highlight { color: #10b981; font-weight: bold; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 24px; }
+        .widget-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 24px; }
+        .widget-card h3 { margin: 0 0 8px 0; font-size: 16px; font-weight: 500; }
+        .widget-card .desc { color: var(--muted); font-size: 14px; margin: 0 0 24px 0; }
+        .chart-container { position: relative; height: 300px; width: 100%; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>HSP // QUANTITATIVE ANALYSIS</h1>
+            <div class="meta">SESSION ID: prod_4b4f0bd5</div>
+        </div>
+        
+        <div class="terminal-feed">> Swarm consensus reached. Allocating capital to Morpho Gauntlet USDC Prime and Morpho Steakhouse Prime USDC. High-reputation agents favor balanced risk and reward.</div>
+        
+            <div class="consensus-card">
+                <div class="consensus-header">MASTER SWARM CONSENSUS</div>
+                <div class="consensus-body">
+                    <div class="stat"><span class="label">Action</span><span class="value">DEPOSIT</span></div>
+                    <div class="stat"><span class="label">Target</span><span class="value">Morpho - Gauntlet USDC Prime</span></div>
+                    <div class="stat"><span class="label">Swarm Confidence</span><span class="value highlight">85%</span></div>
+                </div>
+            </div>
+        
+        <div class="grid">
+            
+            <div class="widget-card">
+                <h3>Risk vs. Reward</h3>
+                <p class="desc">Scatter plot showing the relationship between APY and TVL for different assets.</p>
+                <div class="chart-container">
+                    <canvas id="chart_0"></canvas>
+                </div>
+            </div>
+            <div class="widget-card">
+                <h3>Capital Allocation by Asset</h3>
+                <p class="desc">Treemap showing the distribution of capital allocated to different assets.</p>
+                <div class="chart-container">
+                    <canvas id="chart_1"></canvas>
+                </div>
+            </div>
+            <div class="widget-card">
+                <h3>Agent Divergence</h3>
+                <p class="desc">Bar chart showing the divergence in recommendations among agents.</p>
+                <div class="chart-container">
+                    <canvas id="chart_2"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Initialize Charts
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = 'Inter';
+        
+            new Chart(document.getElementById('chart_0'), {
+                
+                type: 'bubble',
+                data: {
+                    labels: ["Morpho Gauntlet USDC Prime (High TVL, Moderate APY)","Morpho Steakhouse Prime USDC (High TVL, Moderate APY)","Morpho Spark USDC Vault (Moderate TVL, Moderate APY)","Euler AlphaGrowth (Low TVL, High APY)"],
+                    datasets: [{
+                        label: 'Risk vs. Reward',
+                        data: [{ x: 407519255.52, y: 5.58, r: 6 },{ x: 280246360.34, y: 5.29, r: 6 },{ x: 7811631.48, y: 5.05, r: 6 },{ x: 434898.11, y: 34.51, r: 6 }],
+                        backgroundColor: 'rgba(56, 189, 248, 0.6)',
+                        borderColor: 'rgba(56, 189, 248, 1)',
+                    }]
+                },
+                options: { plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#334155' } }, y: { grid: { color: '#334155' } } } }
+            });
+            
+            new Chart(document.getElementById('chart_1'), {
+                
+                type: 'bar',
+                data: {
+                    labels: ["Morpho Gauntlet USDC Prime","Morpho Steakhouse Prime USDC","Morpho Spark USDC Vault","Euler AlphaGrowth"],
+                    datasets: [{
+                        label: 'Capital Allocation by Asset',
+                        data: [1,1,1,1],
+                        backgroundColor: 'rgba(167, 139, 250, 0.8)',
+                    }]
+                },
+                options: { scales: { y: { beginAtZero: true, grid: { color: '#334155' } }, x: { grid: { display: false } } } }
+            });
+            
+            new Chart(document.getElementById('chart_2'), {
+                
+                type: 'bar',
+                data: {
+                    labels: ["Morpho Gauntlet USDC Prime","Morpho Steakhouse Prime USDC","Morpho Spark USDC Vault","Euler AlphaGrowth"],
+                    datasets: [{
+                        label: 'Agent Divergence',
+                        data: [0.85,0.75,0.45,0.15],
+                        backgroundColor: 'rgba(167, 139, 250, 0.8)',
+                    }]
+                },
+                options: { scales: { y: { beginAtZero: true, grid: { color: '#334155' } }, x: { grid: { display: false } } } }
+            });
+            
+    </script>
+</body>
+</html>

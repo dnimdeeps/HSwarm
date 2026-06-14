@@ -1,0 +1,232 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Stealth Black/Gray Theme */
+  --bg-dark: #000000;
+  --bg-card: #111111;
+  --bg-card-hover: #1A1A1A;
+  
+  --border-glass: #2A2A2A;
+  --border-glass-hover: #444444;
+  
+  /* Red Accents */
+  --accent-primary: #E63946;
+  --accent-secondary: #FF2A2A;
+  
+  --text-main: #FFFFFF;
+  --text-muted: #888888;
+  
+  --radius-lg: 12px;
+  --radius-md: 8px;
+  --radius-sm: 4px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Base Classes */
+.glass-panel {
+  background: var(--bg-dark);
+  border-bottom: 1px solid var(--border-glass);
+}
+
+.glass-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  transition: all 0.2s ease;
+}
+
+.glass-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-glass-hover);
+}
+
+/* Bento Box Grid */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+/* Buttons */
+.btn-primary {
+  background: var(--accent-primary);
+  color: #fff;
+  border: 1px solid var(--accent-secondary);
+  border-radius: var(--radius-md);
+  padding: 10px 20px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background: var(--accent-secondary);
+  box-shadow: 0 0 10px rgba(230, 57, 70, 0.3);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text-main);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  padding: 10px 20px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: #1a1a1a;
+  border-color: var(--text-muted);
+}
+
+/* Brutalist Button for Vaults */
+.btn-brutalist {
+  background: var(--accent-primary);
+  color: #fff;
+  border: none;
+  border-radius: 0px;
+  padding: 10px 24px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.btn-brutalist:hover {
+  background: var(--accent-secondary);
+}
+
+/* Typography */
+.text-accent {
+  color: var(--accent-primary);
+}
+
+.heading-xl {
+  font-size: 3.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.heading-lg {
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.heading-md {
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+/* Vault Table Hover Logic */
+.vault-row {
+  transition: background 0.2s ease;
+}
+.vault-row:hover {
+  background: var(--bg-card-hover);
+}
+.vault-row:hover .hover-white {
+  color: #ffffff !important;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+@keyframes pulse-square {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.animate-pulse-square {
+  animation: pulse-square 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Arrow Shapes */
+.shape-arrow-right {
+  clip-path: polygon(0% 20%, 75% 20%, 75% 0%, 100% 50%, 75% 100%, 75% 80%, 0% 80%);
+}
+
+.shape-arrow-left {
+  clip-path: polygon(25% 20%, 100% 20%, 100% 80%, 25% 80%, 25% 100%, 0% 50%, 25% 0%);
+}
+
+/* Waiting Room Specifics */
+.smoked-card {
+  background: rgba(17, 17, 17, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 0;
+  border-top: 2px solid var(--accent-primary);
+  padding: 16px 24px;
+}
+
+.modal-overlay {
+  backdrop-filter: blur(8px) brightness(0.3);
+  -webkit-backdrop-filter: blur(8px) brightness(0.3);
+}
+
+.agent-card-selection {
+  background: #1A1A1A;
+  border: 1px solid #2A2A2A;
+  transition: all 0.1s ease;
+  cursor: crosshair;
+}
+
+.agent-card-selection:hover, .agent-card-selection.selected {
+  border-color: #FFFFFF;
+}
+
+@keyframes slide-in-right {
+  0% { transform: scaleX(0); opacity: 1; }
+  90% { transform: scaleX(1); opacity: 1; }
+  100% { transform: scaleX(1); opacity: 0; }
+}
+
+.slot-blink {
+  animation: blink-rapid 0.2s 2;
+}
+
+@keyframes blink-rapid {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
