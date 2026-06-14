@@ -11,10 +11,8 @@ node_modules/
 .env.production.local
 
 # Databases
-*.db
 *.sqlite
 *.sqlite3
-swarm_responses.db
 
 # Build outputs
 dist/
