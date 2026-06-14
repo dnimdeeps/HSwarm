@@ -1,58 +1,82 @@
-# HSwarm Protocol
+# HSwarm
 
-A decentralized, self-healing black-box AI protocol designed to leverage the ERC-8004 Agent Standard.
+**Agent Swarm Protocol — from ERC-8004 discovery to on-chain deployment.**
 
-HSwarm filters, audits, and clusters low-reputation ERC-8004 agents into a single cooperative "black-box" Swarm to execute complex market strategies. It autonomously validates agent health via MCP probing, routes data, standardizes messy agent outputs using Hugging Face Inference (chat completions), and prepares them for a unified on-chain execution.
+HSwarm discovers real AI agents registered on-chain via ERC-8004, audits them for compatibility, runs them through a LangGraph consensus pipeline, and deploys the resulting strategy as a functioning smart contract on Arbitrum.
 
-## 🛠 Prerequisites
+See [`HSwarm.md`](./HSwarm.md) for full documentation.
 
-1. **Node.js** v18+ 
-2. A `.env` file in the root directory containing your API keys and The Graph Query URLs.
+---
 
-### `.env` File Example
+## Quick Start
+
+```bash
+npm install
+```
+
+Create a `.env` file (see `.env.example` or below):
+
 ```env
-# The Graph Studio Query URLs (Ensure you use active deployment endpoints)
-SUBGRAPH_URL_ETH="https://api.studio.thegraph.com/query/.../version/latest"
-SUBGRAPH_URL_BASE="https://api.studio.thegraph.com/query/.../version/latest"
-SUBGRAPH_URL_ARB="https://api.studio.thegraph.com/query/.../version/latest"
+PRIVATE_KEY=0x...
+ARBITRUM_SEPOLIA_RPC_URL=https://sepolia-arbitrum.gateway...
+ARBITRUM_MAINNET_RPC_URL=https://arbitrum-mainnet.gateway...
+SUBGRAPH_URL_ARB=https://api.studio.thegraph.com/query/.../version/latest
+HF_TOKEN=hf_...
+GEMINI_API_KEY=AIza...
+```
 
-# LLM Standardizer — Hugging Face Inference Providers
-HF_TOKEN="your-huggingface-token"
-# Optional: override default model (meta-llama/Llama-3.1-8B-Instruct)
-HF_MODEL="meta-llama/Llama-3.1-8B-Instruct"
+### Run the full pipeline
+
+```bash
+npx ts-node src/run_auto.ts "Arbitrum Sepolia" VAULT 10
+```
+
+This runs: Agent Discovery → Audit → LLM Standardization → LangGraph Consensus → On-Chain Deployment
+
+### Start the frontend
+
+```bash
+# Terminal 1 — API backend
+node server.js
+
+# Terminal 2 — Frontend dev server
+cd frontend && npm run dev
+```
+
+Then open `http://localhost:5173/vault/<vault-address>`
+
+---
+
+## Pipeline
+
+| Step | What it does |
+|------|-------------|
+| 1 — Discovery | Queries ERC-8004 subgraphs across 4 chains, selects agents by function (not reputation) |
+| 2 — Audit | Probes each agent's MCP server with 16 protocol variants, stores results permanently |
+| 3 — Standardization | Normalizes raw agent responses into unified JSON via Hugging Face LLM |
+| 4 — Consensus | LangGraph pipeline analyzes data and produces a unified strategy blueprint |
+| 5 — Deployment | Deploys ERC-4626 vault on Arbitrum with protocol adapters + Chainlink Automation |
+| 6 — Frontend | React dashboard for deposit/withdraw and vault monitoring |
+
+---
+
+## Project Structure
+
+```
+src/                — Pipeline (discovery, audit, consensus, deployment)
+contracts/          — Solidity vault + adapters (Foundry)
+frontend/           — React web app (Vite + wagmi + RainbowKit)
+server.js           — API backend for agent registry
+deployments.json    — Deployed vault records (safe to commit)
+swarm_responses.db  — Agent database (gitignored)
 ```
 
 ---
 
-## 🚀 How to Use
+## Current Deployments
 
-The backend is composed of two primary scripts. 
+| Network | Vault | Strategy |
+|---------|-------|----------|
+| Arbitrum One | `0x201ea2ade98112973C14B822e7Ff034d1f435b00` | Safe USDC Yield Enhancer |
 
-### 1. Build the Global Agent Cache (Optional, but highly recommended)
-To avoid pinging slow IPFS nodes every time you search for agents, you can download the global metadata registry of ERC-8004 agents into your local database. 
-
-```bash
-npx ts-node src/sync.ts
-```
-*Select a network (or "All") to systematically fetch all agent IDs and their associated IPFS JSON metadata.*
-
-### 2. Run the Main Swarm Pipeline
-This script runs the core end-to-end pipeline (Steps 1 to 3):
-1. **Discovery:** Finds agents matching your strict parameters (Live or via Local Cache).
-2. **Auditing:** Probes the agents' MCP endpoints using a self-healing auditor that tests 16 protocol/header combinations to verify they are fully responsive.
-3. **LLM Standardization:** Feeds your prompt to the active agents, captures their raw outputs, and standardizes their trading intents into a unified JSON schema via the Hugging Face chat completions API.
-
-```bash
-npx ts-node src/index.ts
-```
-*When prompted, select whether you want to search the Live Network (Option 1) or your Local Cache (Option 2).*
-
----
-
-## 🗄 Database Structure
-The protocol operates out of an efficient local SQLite database `swarm_responses.db` which contains 4 tables:
-
-1. **`agent_metadata_cache`**: The massive local index populated by `sync.ts`.
-2. **`agent_tasks`**: An ephemeral table that tracks the real-time execution state of the Swarm in the current run (Pending → Fetching → Parsing LLM → Completed).
-3. **`valid_agents`**: The persistent "Gold" registry of healthy agents that have successfully passed the MCP protocol audit.
-4. **`failed_agents`**: The persistent "Trash" registry of dead, inactive, or OAuth-gated agents (preventing them from slowing down future runs).
+Chainlink Automation: https://automation.chain.link/arbitrum/69807263058704082676571068256513945276145989435541215317533139799806854460064
