@@ -1,82 +1,93 @@
 # HSwarm
 
-**Agent Swarm Protocol — from ERC-8004 discovery to on-chain deployment.**
+**Decentralized AI Agent Swarm Protocol — Discovery, Audit, Standardization & Agentic Products.**
 
-HSwarm discovers real AI agents registered on-chain via ERC-8004, audits them for compatibility, runs them through a LangGraph consensus pipeline, and deploys the resulting strategy as a functioning smart contract on Arbitrum.
+> 🌐 **Live App:** [https://h-swarm.vercel.app](https://h-swarm.vercel.app)
 
-See [`HSwarm.md`](./HSwarm.md) for full documentation.
+HSwarm discovers real AI agents registered on-chain via ERC-8004, audits them for MCP compatibility, standardizes their output through a Hugging Face LLM layer, and assembles them into cooperative **Swarm Formations** — packaged as user-facing **Agentic Products** (Vaults, SuperAgents, etc.).
+
+See [`HSwarm.md`](./HSwarm.md) for full technical documentation.
 
 ---
 
-## Quick Start
+## Live Demo
 
-```bash
-npm install
-```
+The platform is fully deployed and accessible at:
 
-Create a `.env` file (see `.env.example` or below):
+**[https://h-swarm.vercel.app](https://h-swarm.vercel.app)**
 
-```env
-PRIVATE_KEY=0x...
-ARBITRUM_SEPOLIA_RPC_URL=https://sepolia-arbitrum.gateway...
-ARBITRUM_MAINNET_RPC_URL=https://arbitrum-mainnet.gateway...
-SUBGRAPH_URL_ARB=https://api.studio.thegraph.com/query/.../version/latest
-HF_TOKEN=hf_...
-GEMINI_API_KEY=AIza...
-```
-
-### Run the full pipeline
-
-```bash
-npx ts-node src/run_auto.ts "Arbitrum Sepolia" VAULT 10
-```
-
-This runs: Agent Discovery → Audit → LLM Standardization → LangGraph Consensus → On-Chain Deployment
-
-### Start the frontend
-
-```bash
-# Terminal 1 — API backend
-node server.js
-
-# Terminal 2 — Frontend dev server
-cd frontend && npm run dev
-```
-
-Then open `http://localhost:5173/vault/<vault-address>`
+- Browse the live **Agent Registry** (valid vs. failed agents across 4 chains)
+- View existing **Agentic Products** built from real on-chain agent swarms
+- **Create or Join** public Swarm Formations
+- Monitor Swarm weights and market summaries
 
 ---
 
 ## Pipeline
 
-| Step | What it does |
-|------|-------------|
-| 1 — Discovery | Queries ERC-8004 subgraphs across 4 chains, selects agents by function (not reputation) |
-| 2 — Audit | Probes each agent's MCP server with 16 protocol variants, stores results permanently |
-| 3 — Standardization | Normalizes raw agent responses into unified JSON via Hugging Face LLM |
-| 4 — Consensus | LangGraph pipeline analyzes data and produces a unified strategy blueprint |
-| 5 — Deployment | Deploys ERC-4626 vault on Arbitrum with protocol adapters + Chainlink Automation |
-| 6 — Frontend | React dashboard for deposit/withdraw and vault monitoring |
+| Step | Status | What it does |
+|------|--------|-------------|
+| 1 — Discovery | ✅ Live | Queries ERC-8004 subgraphs across Ethereum, Base, Arbitrum & BNB Chain |
+| 2 — Audit | ✅ Live | Probes each agent's MCP server with 16 protocol variants, stores results permanently |
+| 3 — Standardization | ✅ Live | Normalizes raw agent responses into unified JSON via Hugging Face LLM |
+| 4 — Weight Scoring | 🔨 In Progress | Backtest swarm decisions against real market data and adjust agent weights |
+| 5 — On-Chain Execution | 🔨 In Progress | Wire swarm consensus to smart contracts for autonomous vault execution |
+
+---
+
+## Local Development
+
+### Prerequisites
+
+- Node.js 18+
+- A `.env` file with the following keys:
+
+```env
+HF_TOKEN=hf_...
+SUBGRAPH_URL_ETH=https://api.studio.thegraph.com/query/.../h-swarm-eth/version/latest
+SUBGRAPH_URL_BASE=https://api.studio.thegraph.com/query/.../hswarm-base/version/latest
+SUBGRAPH_URL_ARB=https://api.studio.thegraph.com/query/.../hswarn-test/version/latest
+SUBGRAPH_URL_BNB=https://api.studio.thegraph.com/query/.../h-swarm-bnb/version/latest
+PRIVATE_KEY=0x...
+ARBITRUM_MAINNET_RPC_URL=https://...
+```
+
+### Install & Run
+
+```bash
+# Install backend dependencies
+npm install
+
+# Terminal 1 — API backend
+node server.js
+
+# Terminal 2 — Frontend dev server
+cd frontend && npm install && npm run dev
+```
+
+Then open [http://localhost:5173](http://localhost:5173)
 
 ---
 
 ## Project Structure
 
 ```
-src/                — Pipeline (discovery, audit, consensus, deployment)
-contracts/          — Solidity vault + adapters (Foundry)
-frontend/           — React web app (Vite + wagmi + RainbowKit)
-server.js           — API backend for agent registry
-deployments.json    — Deployed vault records (safe to commit)
-swarm_responses.db  — Agent database (gitignored)
+src/                  — Pipeline (discovery, audit, standardization)
+  indexer/            — ERC-8004 subgraph fetcher & IPFS resolver
+  orchestrator/       — Auditor, LLM standardizer, database layer
+contracts/            — Solidity vault contracts (Foundry)
+frontend/             — React/Vite web app (wagmi + WalletConnect)
+scripts/              — Development & test utilities
+server.js             — REST API backend for the frontend
+init_db.js            — Database bootstrap script
+HSwarm.md             — Full protocol documentation
 ```
 
 ---
 
-## Current Deployments
+## Deployment
 
-| Network | Vault | Strategy |
-|---------|-------|----------|
-| Arbitrum One | `0x201ea2ade98112973C14B822e7Ff034d1f435b00` | Safe USDC Yield Enhancer |
-
-Chainlink Automation: https://automation.chain.link/arbitrum/69807263058704082676571068256513945276145989435541215317533139799806854460064
+| Service | URL |
+|---------|-----|
+| Frontend (Vercel) | [https://h-swarm.vercel.app](https://h-swarm.vercel.app) |
+| Backend API (Render) | [https://hswarm.onrender.com](https://hswarm.onrender.com) |
