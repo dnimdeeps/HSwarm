@@ -80,7 +80,7 @@ export class ChainlinkActionProvider extends ActionProvider<EvmWalletProvider> {
                 linkAddress = getAddress("0xf97f4df75117a78c1a5a0dbb814af92458539fb4"); // Arbitrum One LINK
             }
 
-            const linkAmount = parseEther("0.1");
+            const linkAmount = parseEther("2");
 
             // Check LINK balance before proceeding
             const publicClient = createPublicClient({
@@ -96,7 +96,7 @@ export class ChainlinkActionProvider extends ActionProvider<EvmWalletProvider> {
             const faucetUrl = isMainnet ? "https://chain.link" : "https://faucets.chain.link/arbitrum-sepolia";
             if (linkBalance < linkAmount) {
                 throw new Error(
-                    `Insufficient LINK. Wallet has ${formatEther(linkBalance)} LINK, need at least 0.1 LINK. ` +
+                    `Insufficient LINK. Wallet has ${formatEther(linkBalance)} LINK, need at least 2 LINK. ` +
                     `Get test LINK at: ${faucetUrl}`
                 );
             }
