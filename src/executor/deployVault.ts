@@ -25,11 +25,11 @@ export async function deployVault(
   const publicClient = createPublicClient({ chain, transport: http(rpc) });
   const walletClient = createWalletClient({ account, chain, transport: http(rpc) });
 
-  // Load Factory ABI & Bytecode
-  const factoryPath = path.join(__dirname, "../../contracts/out/VaultFactory.sol/VaultFactory.json");
-  const factoryJson = JSON.parse(fs.readFileSync(factoryPath, "utf8"));
-  const factoryAbi = factoryJson.abi;
-  const factoryBytecode = factoryJson.bytecode.object;
+  // Load compiled artifacts
+  const artifactsPath = path.join(__dirname, "../../contracts/artifacts.json");
+  const artifacts = JSON.parse(fs.readFileSync(artifactsPath, "utf8"));
+  const factoryAbi = artifacts.VaultFactory.abi;
+  const factoryBytecode = artifacts.VaultFactory.bytecode;
 
   console.log("   Deploying VaultFactory...");
   const factoryTx = await walletClient.deployContract({
@@ -156,11 +156,9 @@ export async function deployVault(
 
       if (isMainnet) {
           if (alloc.protocol === "Aave") {
-              const aaveAbiPath = path.join(__dirname, "../../contracts/out/AaveAdapter.sol/AaveAdapter.json");
-              const aaveJson = JSON.parse(fs.readFileSync(aaveAbiPath, "utf8"));
               adapterTx = await walletClient.deployContract({
-                abi: aaveJson.abi,
-                bytecode: aaveJson.bytecode.object,
+                abi: artifacts.AaveAdapter.abi,
+                bytecode: artifacts.AaveAdapter.bytecode,
                 args: [
                     "0x794a61358D6845594F94dc1DB02A252b5b4814aD", // Aave V3 Pool
                     "0x724dc807b04555b71ed48a6896b6F41593b8C637", // aArbUSDCn
@@ -169,11 +167,9 @@ export async function deployVault(
                 ]
               });
           } else if (alloc.protocol === "Compound") {
-              const compoundAbiPath = path.join(__dirname, "../../contracts/out/CompoundAdapter.sol/CompoundAdapter.json");
-              const compoundJson = JSON.parse(fs.readFileSync(compoundAbiPath, "utf8"));
               adapterTx = await walletClient.deployContract({
-                abi: compoundJson.abi,
-                bytecode: compoundJson.bytecode.object,
+                abi: artifacts.CompoundAdapter.abi,
+                bytecode: artifacts.CompoundAdapter.bytecode,
                 args: [
                     "0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA", // cUSDCv3 proxy
                     usdcAddress,
@@ -181,13 +177,11 @@ export async function deployVault(
                 ]
               });
           } else if (alloc.protocol === "Morpho") {
-              const morphoAbiPath = path.join(__dirname, "../../contracts/out/MorphoAdapter.sol/MorphoAdapter.json");
-              const morphoJson = JSON.parse(fs.readFileSync(morphoAbiPath, "utf8"));
               const morphoVault = getMorphoVault(alloc.pool);
               console.log(`       Using Morpho vault ${morphoVault} for pool "${alloc.pool}"`);
               adapterTx = await walletClient.deployContract({
-                abi: morphoJson.abi,
-                bytecode: morphoJson.bytecode.object,
+                abi: artifacts.MorphoAdapter.abi,
+                bytecode: artifacts.MorphoAdapter.bytecode,
                 args: [
                     morphoVault,
                     usdcAddress, // Real USDC
@@ -196,21 +190,17 @@ export async function deployVault(
               });
           } else {
              console.log(`       [WARN] Unsupported protocol ${alloc.protocol} on Mainnet. Using Aave as fallback.`);
-             const aaveAbiPath = path.join(__dirname, "../../contracts/out/AaveAdapter.sol/AaveAdapter.json");
-             const aaveJson = JSON.parse(fs.readFileSync(aaveAbiPath, "utf8"));
              adapterTx = await walletClient.deployContract({
-               abi: aaveJson.abi,
-               bytecode: aaveJson.bytecode.object,
+                abi: artifacts.AaveAdapter.abi,
+                bytecode: artifacts.AaveAdapter.bytecode,
                args: ["0x794a61358D6845594F94dc1DB02A252b5b4814aD", "0x724dc807b04555b71ed48a6896b6F41593b8C637", usdcAddress, vaultAddress]
              });
           }
       } else {
           // Use MockAdapter for testnets
-          const mockAdapterPath = path.join(__dirname, "../../contracts/out/MockAdapter.sol/MockAdapter.json");
-          const mockJson = JSON.parse(fs.readFileSync(mockAdapterPath, "utf8"));
           adapterTx = await walletClient.deployContract({
-            abi: mockJson.abi,
-            bytecode: mockJson.bytecode.object,
+            abi: artifacts.MockAdapter.abi,
+            bytecode: artifacts.MockAdapter.bytecode,
             args: [usdcAddress, vaultAddress, alloc.protocol],
           });
       }
@@ -225,8 +215,7 @@ export async function deployVault(
 
     if (formattedAllocations.length > 0) {
       console.log(`   Setting allocations on Vault...`);
-      const vaultAbiPath = path.join(__dirname, "../../contracts/out/HSwarmVault.sol/HSwarmVault.json");
-      const vaultAbi = JSON.parse(fs.readFileSync(vaultAbiPath, "utf8")).abi;
+      const vaultAbi = artifacts.HSwarmVault.abi;
       
       const setAllocTx = await walletClient.writeContract({
         address: vaultAddress as `0x${string}`,
