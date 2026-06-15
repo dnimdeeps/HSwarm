@@ -74,8 +74,7 @@ export class ChainlinkActionProvider extends ActionProvider<EvmWalletProvider> {
             let registrarAddress: Address = getAddress("0x881918E24290084409DaA91979A30e6f0dB52eBe"); // Arb Sepolia Automation 2.1 Registrar
             let linkAddress: Address = getAddress("0xb1D4538B4571d411F07960EF2838Ce337FE1E80E"); // Arb Sepolia LINK
 
-            // AgentKit returns networkId as "arbitrum-mainnet" or "arbitrum-sepolia"
-            const isMainnet = networkId === "arbitrum-mainnet";
+            const isMainnet = networkId?.toString() !== "421614";
             if (isMainnet) {
                 registrarAddress = getAddress("0x86EFBD0b6736Bed994962f9797049422A3A8E8Ad"); // Arbitrum One Automation 2.1 Registrar
                 linkAddress = getAddress("0xf97f4df75117a78c1a5a0dbb814af92458539fb4"); // Arbitrum One LINK
