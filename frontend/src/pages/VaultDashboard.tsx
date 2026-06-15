@@ -184,7 +184,7 @@ function VaultDashboard() {
       try {
         const logs = await publicClient.getLogs({
           address: VAULT,
-          fromBlock: 'earliest',
+          fromBlock: 0x0n,
           toBlock: 'latest',
         }) as any[];
         const parsed: ParsedEvent[] = [];

@@ -295,7 +295,7 @@ export default function ProductDetail() {
       try {
         const logs = await publicClient.getLogs({
           address: VAULT_ADDRESS as `0x${string}`,
-          fromBlock: 'earliest',
+          fromBlock: 0x0n,
           toBlock:   'latest',
         }) as any[];
 
