@@ -19,7 +19,7 @@ import { WagmiProvider, createConfig, http } from 'wagmi';
 import { arbitrumSepolia, arbitrum } from 'wagmi/chains';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 
-const projectId = 'c4f79cc0e8e4585c5443a758782bbcd3';
+const projectId = 'c07834ce800f0fdcea34e46cfe3ef082';
 
 const connectors = connectorsForWallets(
   [
