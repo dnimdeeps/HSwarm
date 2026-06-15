@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "tsc",
     "start": "node init_db.js && node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

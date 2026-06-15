@@ -65,7 +65,7 @@ let activeKeeper = {
 function spawnKeeper() {
   if (activeKeeper.isRunning) return;
   const keeperInterval = process.env.KEEPER_INTERVAL_MS || '120000';
-  const child = require('child_process').spawn('npx', ['ts-node', 'src/keeper/keeperRunner.ts', keeperInterval], {
+  const child = require('child_process').spawn('node', ['dist/keeper/keeperRunner.js', keeperInterval], {
     cwd: __dirname,
     env: process.env,
   });
@@ -320,7 +320,7 @@ const server = http.createServer((req, res) => {
 
         // @ts-ignore
         const { spawn } = require('child_process');
-        const child = spawn('npx', ['ts-node', 'src/run_auto.ts', payload.network || 'Arbitrum/Testnet', payload.purpose || 'VAULT', payload.numAgents || '10'], {
+        const child = spawn('node', ['dist/run_auto.js', payload.network || 'Arbitrum/Testnet', payload.purpose || 'VAULT', payload.numAgents || '10'], {
           cwd: __dirname,
           env: process.env
         });
